@@ -21,10 +21,22 @@ try:
 except Exception as e:
 	print(e)
 else:
+	wind_name = ""
+	if int(data["current"]["wind_speed"])< 3:
+		wind_name = "Net vetra"
+	elif int(data["current"]["wind_speed"])< 5:
+		wind_name = "Slabij veter"
+	elif int(data["current"]["wind_speed"]) < 10:
+		wind_name = "Srednij veter"
+	elif int(data["current"]["wind_speed"]) < 15:
+		wind_name = "Silnij veter"
+	else:
+		wind_name = "Uraganij veter"
 
-	weather_forecast = f"Temperatura: {current['temp']}\nOsiusiajetsia kak: {current['feels_like']}\n"
+	weather_forecast = f"Temperatura: {round(int(current['temp']))}\nOsiusiajetsia kak: {round(int(current['feels_like']))}\n"
+	weather_forecast += f"{wind_name}\n"
+	weather_forecast +=f'Skorost vetra: {round(int(data["current"]["wind_speed"]))} m/s\nPorivi vetra: {round(int(data["current"]["wind_gust"]))} m/s\n'
 	list_hourly = data["hourly"]
-	print(list_hourly)
 
 	rain_list = []
 	for n in range(16):
