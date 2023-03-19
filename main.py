@@ -1,10 +1,13 @@
-from hidden_info import *
 import requests
 import smtplib
+import os
 
 OWM_ENDPOINT = "https://api.openweathermap.org/data/3.0/onecall"
+MY_LAT = 55.66
+MY_LNG = 21.18
+
 params = {
-	"appid": api_key,
+	"appid": os.environ.get("OMW_API_KEY"),
 	"lat": MY_LAT,
 	"lon": MY_LNG,
 	"units": "metric",
@@ -15,8 +18,8 @@ try:
 	response.raise_for_status()
 	data = response.json()
 	current = data["current"]
-except:
-	pass
+except Exception as e:
+	print(e)
 else:
 
 	weather_forecast = f"Temperatura: {current['temp']}\nOsiusiajetsia kak: {current['feels_like']}\n"
@@ -30,11 +33,6 @@ else:
 		weather_id = list_hourly[n]["weather"][0]["id"]
 		if int(weather_id) < 600:
 			rain_list.append(n)
-		print(weather)
-		print(weather_desc)
-		print(weather_id)
-		print(n)
-		print("-----")
 
 	if len(rain_list) > 0:
 		weather_forecast +="Dozd budet v: "
@@ -44,12 +42,13 @@ else:
 	else:
 		weather_forecast += "Dozdia ne budet"
 
-	addresses = ["elenasokolkina@gmail.com", "ansokolkin@gmail.com" ]
-	connection = smtplib.SMTP(smtp_info, port)
+	# addresses = ["elenasokolkina@gmail.com", "ansokolkin@gmail.com", "ira-s@bk.ru"]
+	addresses = ["ansokolkin@gmail.com"]
+	connection = smtplib.SMTP(os.environ.get("EMAIL_TEST_SMTP"), int(os.environ.get("EMAIL_TEST_PORT")))
 	connection.starttls()
-	connection.login(user=email, password=password)
+	connection.login(user=os.environ.get("EMAIL_TEST_NAME"), password=os.environ.get("EMAIL_TEST_PASSWORD"))
 	connection.sendmail(
-		from_addr=email,
+		from_addr=os.environ.get("EMAIL_TEST_NAME"),
 		to_addrs=addresses,
 		msg=f"Subject:Prognoz pogodi ot Antona\n\n {weather_forecast}")
 	connection.close()
