@@ -2,6 +2,7 @@ import requests
 import smtplib
 import os
 from email.message import EmailMessage
+from datetime import datetime
 
 # TODO 6 Temperatura vodi
 
@@ -36,7 +37,7 @@ def define_weather(t, f, w, g):
 	text = f"Температура воздуха: {int(round(t))} градусов\nОщущается как: {int(round(f))} градусов\n"
 	text += f"{wind_name(w)}\n"
 	text += f'Скорость ветра: {int(round(w))} м/с\n'
-	if g > w + 2:
+	if g > w + 4:
 		text += f'Порывы ветра: {int(round(g))} м/с\n'
 	return text
 
@@ -118,9 +119,36 @@ else:
 	weather_forecast_ru += define_rain_text(rain_list[3], -16)
 
 	weather_forecast_ru += "\n\nЖелаю хорошего дня!!!\nАнтон"
+	today = datetime.now()
+	if 10> int(today.month) > 4:
 
+		try:
+			water_url = 'https://api.stormglass.io/v2/weather/point'
 
-	addresses = ["elenasokolkina@gmail.com", "gutoreva@gmail.com"]
+			water_params = {
+				'lat':MY_LAT,
+				'lng':MY_LNG,
+				'params': ','.join(['waveHeight','waterTemperature']),
+				'start': datetime.timestamp(today)+21600,
+				'end': datetime.timestamp(today)+21600
+			}
+
+			water_headers = {
+				'Authorization': os.environ.get('WATER_KEY')
+			}
+
+			w_response = requests.get(url=water_url, headers=water_headers, params=water_params)
+			w_response.raise_for_status()
+			water = int(w_response.json()['hours'][0]['waterTemperature']['meto'])
+			wave = float(w_response.json()['hours'][0]['waveHeight']['sg'])
+
+		except:
+			print("water request failed")
+		else:
+			weather_forecast_main += f"\nТемпература воды в море: {water} градусов. Высота волн {wave} м."
+
+	# addresses = ["elenasokolkina@gmail.com", "ansokolkin@gmail.com", "gutoreva@gmail.com"]
+	addresses = ["ansokolkin@gmail.com"]
 	connection = smtplib.SMTP(os.environ.get("EMAIL_TEST_SMTP"), int(os.environ.get("EMAIL_TEST_PORT")))
 	connection.starttls()
 	connection.login(user=os.environ.get("EMAIL_TEST_NAME"), password=os.environ.get("EMAIL_TEST_PASSWORD"))
@@ -134,8 +162,8 @@ else:
 	connection.close()
 
 	BOT_TOKEN = os.environ.get("BOT_TOKEN")
-	chat = "-903822745"
-	# chat_test = "-972102355"
+	# chat = "-903822745"
+	chat = "-972102355"
 	url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={chat}&text={weather_forecast_main}"
 	requests.get(url).json()
 
